@@ -1,10 +1,10 @@
 
 #pragma once
 #include <string>
-#include<vector>
-#include<array>
+#include <vector>
+#include <array>
 using namespace std;
-extern int pf[5];
+extern int pf[5];    //记录是否通过
 
 // 定义关卡信息结构体
 struct LevelInfo 
