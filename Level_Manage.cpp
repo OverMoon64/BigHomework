@@ -116,7 +116,7 @@ void displayLevelDetails(int levelNumber)//显示关卡详细信息
         if(i<levelData[levelNumber-1].target.size()-1) cout<<",";
     }
     cout<<endl;
-    cout<<"Available spaces:"<<levelData[levelNumber-1].space<<endl;
+    cout<<"Available spaces:"<<levelData[levelNumber-1].spacenumber<<endl;
     cout<<"Available orders:";
     for(int i=0;i<levelData[levelNumber-1].orderset.size();i++)
     {

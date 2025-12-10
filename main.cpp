@@ -1,5 +1,6 @@
 #include"Display.h"
 #include"Level_Manage.h"
+#include"Game_Run.h"
 #include<iostream>
 #include<fstream>
 
@@ -13,10 +14,14 @@ int levelnumber=-1;
 int main()
 {
     cout<<"Welcome to the game, nice to see you again~~~"<<endl;
-    showlevel();
-    levelnumber=chooselevel();
-    displayLevelDetails(levelnumber);
+    while(1)
 
-    cin.get();
+    {
+        showlevel();
+        levelnumber=chooselevel();
+        displayLevelDetails(levelnumber);
+        LevelInfo current_info=levelData[levelnumber-1];
+        levelrun(levelnumber,current_info);
+    }
     return 0;
 }

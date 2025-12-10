@@ -14,7 +14,7 @@ struct LevelInfo
     string description;
     vector<int>listentry;//输入序列
     vector<int>target;//目标输出序列
-    int space;
+    int spacenumber;
 
 };
 
