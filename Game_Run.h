@@ -2,6 +2,11 @@
 
 using namespace std;
 
+//声明函数
+bool current_box();//是否存在当前积木
+
+bool is_space_taken[];//记录空地是否被占据
+
 char scene[100][100];
 
 char **box(int);
@@ -92,3 +97,4 @@ char **robot_body();
 
 
 */
+
