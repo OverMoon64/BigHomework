@@ -1,36 +1,91 @@
 #include "Order_Set.h"
 #include <iostream>
+#include<sstream>
+
 using namespace std;
 
 /// @brief 
-extern bool is_space_taken[];
-extern bool current_box();
 
-order get_order()
+extern bool current_box;
+extern vector<bool> is_space_taken;//网上说可能有坑！！！！！！！
+order get_order(int line_num)   //注意此函数新增参数line_num
 {
     order input;
-    input.operand=-1;
-    cin >>input.type;
-    if(cin.peek()<'0' && cin.peek()>'9');
-    else 
-    {cin>>input.operand;
-    if(cin.peek()!='\n')    input.operand=-1;}
-    if(input.operand!=(int)input.operand)   input.operand=-1;
-    //line_num???
-    return input;
-}
-
-bool check_legal(order x)   //还需要大改，检查空地、当前积木、指令的行数
-{
-    if(x.type=="inbox" || x.type=="outbox")
+    input.line_num=line_num;
+    string input_line;
+    getline(cin,input_line);//输入一整行
+    stringstream ss(input_line);
+    if(!(ss>>input.type))   //没有输入
     {
-        if(x.operand==-1)    return true;
-        else return false;
+        input.type="Undefined";
+        input.operand=-1;
+        return input;
+    }
+    string token;
+    if(ss>>token)//尝试读取操作数
+    {
+        string extra;
+        if(ss>>extra)   //看有没有多余内容
+        {
+        input.operand=-1;
+        return input;
+        }
+        bool is_integer=true;//判断操作数是否为整数
+        for(int i=0; i<token.length(); i++)
+        {
+            if(!isdigit(token[i]))    {is_integer=false;break;}
+        }
+        if(is_integer)
+        {
+            input.operand=stoi(token);
+            if(input.operand<=0)    input.operand=-1;
+        }   
     }
     else
     {
-        if(x.operand==-1)   return false;
-        else return true;
+        input.operand=0;//0代表没有操作数
+    }
+    return input;
+}
+
+bool check_legal(order x)   
+{
+    if(x.operand==-1)   return false;//-1代表错误
+    if(x.type=="inbox")//指令为inbox，需要无操作数
+    {
+        if(x.operand==0)   return true;
+        else return false;
+    }
+    if(x.type=="outbox")//指令为outbox，需要无操作数、有当前积木
+    {
+        if(x.operand==0 && current_box)   return true;
+        else return false;
+    }
+    if(x.type=="add" || x.type=="sub")//指令为add或sub，需要有操作数、有当前积木、x号空地存在且有积木
+    {
+        if(is_space_taken.size()-1<x.operand)   return false;//空地数不够
+        if(x.operand==0)   return false; //没有操作数
+        if(!current_box)    return false;//没有当前积木
+        if(!is_space_taken[x.operand])  return false;//空地上没有积木
+        return true;
+    }
+    if(x.type=="copyto")//指令为copyto，需要有操作数、有当前积木，x号空地存在
+    {
+        if(x.operand!=0 && current_box && is_space_taken.size()>x.operand)  return true;
+        else return false;
+    }
+    if(x.type=="copyfrom")//指令为copyyfrom，需要有操作数、x号空地存在且有积木
+    {
+        if(x.operand!=0 && is_space_taken.size()>x.operand && is_space_taken[x.operand])    return true;
+        else return false;
+    }
+    if(x.type=="jump")//指令为jump，需要有操作数、x号指令存在
+    {
+
+    }
+    if(x.type=="jumpifzero")//指令为jumpifzero，需要有操作数、有当前积木、x号指令存在
+    {
+
     }
 }
 
@@ -39,4 +94,49 @@ bool is_in_level(string c,vector<string> set)
     for(int i=0; i<set.size(); i++)
     if(c==set[i])   return true;
     return false;
+}
+
+void inbox(vector<int> &inputque,int &currentbox)
+{
+    currentbox=inputque[inputque.size()-1];//取走最后一位
+    inputque.pop_back();//删除拿走的积木
+}
+
+void outbox(vector<int> &targetque,int &currentbox)
+{
+    targetque.push_back(currentbox);
+    currentbox=-100;
+    current_box=0;
+}
+
+void add(vector<int> &space,int &currentbox,int num)
+{
+    currentbox+=space[num];
+}
+
+void sub(vector<int> &space,int &currentbox,int num)
+{
+    currentbox-=space[num];
+}
+
+void copyto(vector<int> &space,int &currentbox,int num)
+{
+    space[num]=currentbox;
+    is_space_taken[num]=1;
+}
+
+void copyfrom(vector<int> &space,int &currentbox,int num)
+{
+    currentbox=space[num];
+    
+}
+
+void jump(int &currentline,int num)
+{
+    currentline=num;
+}
+
+void jumpifzero(int &currentbox,int &currentline,int num)
+{
+    if(currentbox==0) currentline=num;
 }
