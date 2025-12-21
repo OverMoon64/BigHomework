@@ -61,6 +61,8 @@ int chooselevel()
 
         cout<<"Input the level number you choose and start to play!:";
         cin>>snumber;
+        cin.clear();
+        
         bool Isvalidnumber=1;//输入内容有效
         for(int i=0;i<snumber.length();i++)
         {

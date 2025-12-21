@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <vector>
+#include"Level_Manage.h"
+
 using namespace std;
 
 //指令集结构体
@@ -13,7 +15,7 @@ struct order
 //函数声明
 order get_order(int line_num);//获取指令
 bool is_in_level(string,vector<string>);//检查指令是否在关卡里
-bool check_legal(order);//检查是否合法
+bool check_legal(order,int);//检查是否合法
 
 
 void inbox(vector<int> &inputque,int &currentbox);
