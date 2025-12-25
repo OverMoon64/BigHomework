@@ -16,6 +16,10 @@ int main() {
     while (true) {
         showlevel();
         int levelnumber = chooselevel();
+        if (levelnumber == -1) {
+            cout << "Goodbye!" << endl;
+            break;
+        }
         displayLevelDetails(levelnumber);
         LevelInfo current_info = levelData[levelnumber - 1];
         levelrun(levelnumber, current_info);
