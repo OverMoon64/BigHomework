@@ -1,16 +1,21 @@
 #include "UI.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 
 ConsoleRenderer::ConsoleRenderer(RenderOptions opt) : opt_(opt) {}
 
-void ConsoleRenderer::ClearScreenAnsi() {
-    // ANSI: 清屏 + 光标回到左上角。
-    // 在 Windows Terminal / VSCode terminal / macOS terminal / Linux terminal 上一般可用。
+void ConsoleRenderer::ClearScreen() {
+#ifdef _WIN32
+    // Windows 终端对 ANSI 支持不一；system("cls") 更稳（作业环境一般可用）
+    std::system("cls");
+#else
+    // ANSI: 清屏 + 光标回到左上角
     std::cout << "\x1b[2J\x1b[H";
+#endif
 }
 
 std::string ConsoleRenderer::Fit(const std::string& s, int w) {
@@ -41,8 +46,21 @@ std::vector<std::string> ConsoleRenderer::ColumnConveyor(
     return lines;
 }
 
+static void place_sprite(std::string& line, int offset, const std::string& sprite) {
+    if (offset < 0) return;
+    if ((int)line.size() < offset) line += std::string(offset - (int)line.size(), ' ');
+    // ensure line long enough
+    if ((int)line.size() < offset + (int)sprite.size()) {
+        line += std::string(offset + (int)sprite.size() - (int)line.size(), ' ');
+    }
+    for (int i = 0; i < (int)sprite.size(); ++i) {
+        char c = sprite[i];
+        if (c != ' ') line[offset + i] = c;
+    }
+}
+
 void ConsoleRenderer::Render(const RenderSnapshot& s) {
-    if (opt_.clear_screen) ClearScreenAnsi();
+    if (opt_.clear_screen) ClearScreen();
 
     const int innerW = opt_.box_inner_width;
     const int colBoxW = innerW + 2; // "|" + inner + "|"
@@ -56,9 +74,7 @@ void ConsoleRenderer::Render(const RenderSnapshot& s) {
     }
     std::cout << "Executed instructions: " << s.executed << "\n\n";
 
-    // ===== IN / OUT =====
-    // 注意：项目代码里 inputque 是“从末尾 pop”作为队首（下一块积木）。
-    // 这里把“下一块”显示在最上方，所以从 back 开始取。
+    // ===== IN / OUT 内容 =====
     int inShow = std::max(opt_.max_in_preview, 1);
     std::vector<std::string> inItems(inShow);
     for (int i = 0; i < inShow; ++i) {
@@ -76,35 +92,69 @@ void ConsoleRenderer::Render(const RenderSnapshot& s) {
     auto inCol = ColumnConveyor("IN ", inItems, innerW);
     auto outCol = ColumnConveyor("OUT", outItems, innerW);
 
-    // ===== 中间：当前积木 + 机器人 + 空地 =====
-    auto holdBox = Box3(s.has_holding ? std::to_string(s.holding_value) : " ", innerW);
-    std::vector<std::string> robot = {
+    // ===== 空地（Tiles）：一排盒子 + 一排编号 =====
+    std::string floorTop, floorMid, floorBot, floorIdx;
+    size_t tileN = std::min(s.tile_value.size(), s.tile_taken.size());
+    for (size_t i = 0; i < tileN; ++i) {
+        std::string v = (s.tile_taken[i] ? std::to_string(s.tile_value[i]) : " ");
+        auto b = Box3(v, innerW);
+        floorTop += b[0] + " ";
+        floorMid += b[1] + " ";
+        floorBot += b[2] + " ";
+
+        std::ostringstream tmp;
+        tmp << i;
+        // 用盒子宽度对齐下标（box宽 + 一个空格）
+        floorIdx += Fit(tmp.str(), colBoxW + 1);
+    }
+
+    // ===== 机器人移动表现：在 Tiles 上方加一条“机器人轨道” =====
+    // sprite 宽度 7
+    const int spriteW = 7;
+    std::vector<std::string> robotSprite = {
         "   o   ",
         "  /|\\  ",
         "  / \\  "
     };
 
-    // 空地：一排盒子 + 一排编号
-    std::vector<std::string> floorLines;
-    {
-        std::ostringstream rowTop, rowMid, rowBot, rowIdx;
-        size_t tileN = std::min(s.tile_value.size(), s.tile_taken.size());
-        for (size_t i = 0; i < tileN; ++i) {
-            std::string v = (s.tile_taken[i] ? std::to_string(s.tile_value[i]) : " ");
-            auto b = Box3(v, innerW);
-            rowTop << b[0] << " ";
-            rowMid << b[1] << " ";
-            rowBot << b[2] << " ";
+    // 轨道宽度：至少覆盖 tiles 的宽度；如果 tiles 很少，给个最小宽
+    int railW = std::max<int>((int)floorTop.size(), 30);
+    std::string rail1(railW, ' '), rail2(railW, ' '), rail3(railW, ' ');
 
-            // 编号对齐
-            std::ostringstream tmp;
-            tmp << i;
-            rowIdx << Fit(tmp.str(), colBoxW + 1);
-        }
-        floorLines.push_back(rowTop.str());
-        floorLines.push_back(rowMid.str());
-        floorLines.push_back(rowBot.str());
-        floorLines.push_back(rowIdx.str());
+    // 计算机器人应该出现的 offset
+    int offset = 0;
+    if (s.robot_pos == RobotPosKind::In) {
+        offset = 0;
+    } else if (s.robot_pos == RobotPosKind::Out) {
+        offset = std::max(0, railW - spriteW);
+    } else if (s.robot_pos == RobotPosKind::Tile) {
+        int idx = s.robot_tile_index;
+        if (idx < 0) idx = 0;
+        // 每个 tile 盒子长度为 (colBoxW + 1)（含空格）
+        offset = idx * (colBoxW + 1);
+        // 让机器人尽量对齐到盒子左侧；并保证不越界
+        offset = std::min(offset, std::max(0, railW - spriteW));
+    } else {
+        // Idle：居中
+        offset = std::max(0, railW / 2 - spriteW / 2);
+    }
+
+    place_sprite(rail1, offset, robotSprite[0]);
+    place_sprite(rail2, offset, robotSprite[1]);
+    place_sprite(rail3, offset, robotSprite[2]);
+
+    // ===== 当前积木随机器人移动（Carrying block follows robot position） =====
+    // 只在 has_holding=true 时绘制“携带的积木”；没有积木时不绘制，自然也就“不移动”。
+    const int boxW = colBoxW; // 盒子宽度（含边框）
+    int carryOffset = offset + std::max(0, (spriteW - boxW) / 2);
+    carryOffset = std::min(carryOffset, std::max(0, railW - boxW));
+
+    std::string carry1(railW, ' '), carry2(railW, ' '), carry3(railW, ' ');
+    if (s.has_holding) {
+        auto cbox = Box3(std::to_string(s.holding_value), innerW);
+        place_sprite(carry1, carryOffset, cbox[0]);
+        place_sprite(carry2, carryOffset, cbox[1]);
+        place_sprite(carry3, carryOffset, cbox[2]);
     }
 
     // ===== 右侧：程序列表 =====
@@ -119,16 +169,25 @@ void ConsoleRenderer::Render(const RenderSnapshot& s) {
         codeLines.push_back(oss.str());
     }
 
-    // ===== 拼接布局 =====
+    // ===== 中间列：Carrying + RobotRail + Tiles =====
     std::vector<std::string> midLines;
-    midLines.push_back("Holding:");
-    midLines.insert(midLines.end(), holdBox.begin(), holdBox.end());
+    midLines.push_back("Carrying (moves with robot):");
+    midLines.push_back(carry1);
+    midLines.push_back(carry2);
+    midLines.push_back(carry3);
     midLines.push_back("");
-    midLines.insert(midLines.end(), robot.begin(), robot.end());
+    midLines.push_back("Robot:");
+    midLines.push_back(rail1);
+    midLines.push_back(rail2);
+    midLines.push_back(rail3);
     midLines.push_back("");
     midLines.push_back("Tiles:");
-    midLines.insert(midLines.end(), floorLines.begin(), floorLines.end());
+    midLines.push_back(floorTop);
+    midLines.push_back(floorMid);
+    midLines.push_back(floorBot);
+    midLines.push_back(floorIdx);
 
+    // ===== 拼接布局：IN | MID | OUT | CODE =====
     int H = 0;
     H = std::max(H, (int)inCol.size());
     H = std::max(H, (int)outCol.size());
@@ -140,11 +199,14 @@ void ConsoleRenderer::Render(const RenderSnapshot& s) {
         return v[i];
     };
 
-    // 各列宽度（可按需调整）
     const int leftW = colBoxW + 2;
-    const int midW = 56;
-    const int outW = colBoxW + 2;
-    const int codeW = 40;
+    const int outW  = colBoxW + 2;
+
+    // midW: 至少容纳 robot rail + tiles（不截断移动效果）
+    int midW = 56;
+    for (const auto& ln : midLines) midW = std::max(midW, (int)ln.size());
+
+    const int codeW = 44;
 
     for (int i = 0; i < H; ++i) {
         std::cout
