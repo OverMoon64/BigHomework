@@ -13,6 +13,7 @@ struct LevelInfo
     int spacenumber;
 
 };
+
 //指令集结构体
 struct order
 {
