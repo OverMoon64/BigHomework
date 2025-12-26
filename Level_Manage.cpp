@@ -59,9 +59,15 @@ int chooselevel()
     while(1)//输入选择关卡
     {
 
-        cout<<"Input the level number you choose and start to play!:";
+        cout<<"Input the level number you choose and start to play! (or input q to quit):";
         cin>>snumber;
         cin.clear();
+
+        // 允许输入 q / Q 退出选关界面
+        if (snumber == "q" || snumber == "Q") {
+            cout << "\nQuit selected. Bye!\n" << endl;
+            return -1;
+        }
         
         bool Isvalidnumber=1;//输入内容有效
         for(int i=0;i<snumber.length();i++)

@@ -2,6 +2,8 @@
 #include <iostream>
 #include<sstream>
 #include<cctype>
+#include<vector>
+
 #include"Level_Manage.h"
 
 using namespace std;
