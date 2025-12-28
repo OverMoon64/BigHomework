@@ -1,6 +1,5 @@
 #include "Level_Manage.h"
 #include "Game_Run.h"
-
 #include <iostream>
 
 using namespace std;
@@ -17,7 +16,7 @@ int main() {
         showlevel();
         int levelnumber = chooselevel();
         if (levelnumber == -1) {
-            cout << "Goodbye!" << endl;
+            //cout << "Goodbye!" << endl;
             break;
         }
         displayLevelDetails(levelnumber);

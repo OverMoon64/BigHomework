@@ -8,7 +8,7 @@
 #include <chrono>
 #include <thread>
 
-#include "UI.h"
+#include "ConsoleRenderer.h"
 
 enum Direction {Up,Down,Right,Left};
 Direction direction;
@@ -94,7 +94,8 @@ void levelrun(int clevelnum,LevelInfo currentlevel)
     ropt.max_out_preview = 6;
     ropt.clear_screen = true;
     ropt.pause_each_step = false; // 如需“按回车单步”，改成 true
-    ropt.walk_delay_ms = 80;      // 走路动画每一小步的延迟（毫秒）
+    ropt.walk_delay_ms = 1000;      // 走路动画每一小步的延迟（毫秒）
+    ropt.frame_delay_ms = 1000;    // 关键帧停留（毫秒），让清屏刷新也能看清
     ropt.box_inner_width = 3;
     ConsoleRenderer renderer(ropt);
 
@@ -152,6 +153,9 @@ void levelrun(int clevelnum,LevelInfo currentlevel)
             robot_pos = target_pos;
             robot_tile = target_tile;
             renderer.Render(build_snapshot(ip, executed, "Move: " + instr_txt));
+            if (!ropt.pause_each_step && ropt.frame_delay_ms > 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(ropt.frame_delay_ms));
+            }
             return;
         }
 
@@ -159,6 +163,9 @@ void levelrun(int clevelnum,LevelInfo currentlevel)
             robot_pos = target_pos;
             robot_tile = target_tile;
             renderer.Render(build_snapshot(ip, executed, "Move: " + instr_txt));
+            if (!ropt.pause_each_step && ropt.frame_delay_ms > 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(ropt.frame_delay_ms));
+            }
             return;
         }
 
@@ -174,7 +181,12 @@ void levelrun(int clevelnum,LevelInfo currentlevel)
                                          : ("Walking: " + instr_txt);
             renderer.Render(build_snapshot(ip, executed, msg));
 
-            if (idx == t) break;
+            if (idx == t) {
+                if (!ropt.pause_each_step && ropt.frame_delay_ms > 0) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(ropt.frame_delay_ms));
+                }
+                break;
+            }
 
             // 如果不是“按回车单步”，加一点延迟让动画可见
             if (!ropt.pause_each_step && ropt.walk_delay_ms > 0) {
@@ -309,6 +321,9 @@ void levelrun(int clevelnum,LevelInfo currentlevel)
     // 若正常执行完所有指令（未触发 break），渲染一帧“程序结束”
     if (j >= (int)orders.size()) {
         renderer.Render(build_snapshot(j, executed, "Program finished."));
+        if (!ropt.pause_each_step && ropt.frame_delay_ms > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(ropt.frame_delay_ms));
+        }
     }
     bool ispass=1;
     if(targetque.size()!=currentlevel.target.size()) ispass=0;

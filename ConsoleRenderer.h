@@ -10,7 +10,8 @@ struct RenderOptions {
     int max_out_preview = 6;      // OUT 传送带最多显示多少个（从“最新输出”开始）
     bool clear_screen = true;     // 是否每帧清屏
     bool pause_each_step = false; // 是否每步等待回车
-    int walk_delay_ms = 80;       // 走路动画：每一小步之间的延迟（毫秒）
+    int walk_delay_ms = 8000000;       // 走路动画：每一小步之间的延迟（毫秒）
+    int frame_delay_ms = 25000000;    // Move/Executed 等关键帧停留时长（毫秒）
     int box_inner_width = 3;      // 盒子内部宽度
 };
 

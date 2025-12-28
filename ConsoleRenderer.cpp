@@ -1,4 +1,4 @@
-#include "UI.h"
+#include "ConsoleRenderer.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -111,10 +111,20 @@ void ConsoleRenderer::Render(const RenderSnapshot& s) {
     // ===== 机器人移动表现：在 Tiles 上方加一条“机器人轨道” =====
     // sprite 宽度 7
     const int spriteW = 7;
-    std::vector<std::string> robotSprite = {
+
+    // 默认姿态（空手）
+    std::vector<std::string> robotSpriteEmpty = {
         "   o   ",
         "  /|\\  ",
         "  / \\  "
+    };
+
+    // 携带积木时：举着积木（手臂上举）
+    // 注意：积木盒子会绘制在机器人头顶上方
+    std::vector<std::string> robotSpriteCarry = {
+        " \\o/   ",
+        "  |    ",
+        " / \\   "
     };
 
     // 轨道宽度：至少覆盖 tiles 的宽度；如果 tiles 很少，给个最小宽
@@ -139,23 +149,31 @@ void ConsoleRenderer::Render(const RenderSnapshot& s) {
         offset = std::max(0, railW / 2 - spriteW / 2);
     }
 
+    // 根据是否携带积木选择机器人姿态
+    const auto& robotSprite = (s.has_holding ? robotSpriteCarry : robotSpriteEmpty);
     place_sprite(rail1, offset, robotSprite[0]);
     place_sprite(rail2, offset, robotSprite[1]);
     place_sprite(rail3, offset, robotSprite[2]);
 
-    // ===== 当前积木随机器人移动（Carrying block follows robot position） =====
-    // 只在 has_holding=true 时绘制“携带的积木”；没有积木时不绘制，自然也就“不移动”。
+    // ===== 当前积木：随机器人移动，并显示为“举着积木” =====
+    // 只在 has_holding=true 时绘制积木；没有积木时不绘制。
     const int boxW = colBoxW; // 盒子宽度（含边框）
     int carryOffset = offset + std::max(0, (spriteW - boxW) / 2);
     carryOffset = std::min(carryOffset, std::max(0, railW - boxW));
 
     std::string carry1(railW, ' '), carry2(railW, ' '), carry3(railW, ' ');
+    std::string carryLink(railW, ' '); // 积木与机器人之间的“连接”（举着的感觉）
     if (s.has_holding) {
         auto cbox = Box3(std::to_string(s.holding_value), innerW);
         place_sprite(carry1, carryOffset, cbox[0]);
         place_sprite(carry2, carryOffset, cbox[1]);
-        place_sprite(carry3, carryOffset, cbox[2]);
-    }
+        place_sprite(carry3, carryOffset, cbox[2]);        // 在积木与手臂之间画两条斜线，营造“手托着箱子”的效果
+        // 斜线位置：靠近积木底部两侧（不画在边框上）
+        /*int leftX  = carryOffset + 1;
+        int rightX = carryOffset + boxW - 2;
+        if (0 <= leftX && leftX < railW)  carryLink[leftX] = '/';
+        if (0 <= rightX && rightX < railW) carryLink[rightX] = '\\';*/
+}
 
     // ===== 右侧：程序列表 =====
     std::vector<std::string> codeLines;
@@ -169,14 +187,16 @@ void ConsoleRenderer::Render(const RenderSnapshot& s) {
         codeLines.push_back(oss.str());
     }
 
-    // ===== 中间列：Carrying + RobotRail + Tiles =====
+    // ===== 中间列：Robot(+Carrying) + Tiles =====
+    // 有积木时：先画“举着的积木”在机器人头顶上方，再画机器人
     std::vector<std::string> midLines;
-    midLines.push_back("Carrying (moves with robot):");
-    midLines.push_back(carry1);
-    midLines.push_back(carry2);
-    midLines.push_back(carry3);
-    midLines.push_back("");
     midLines.push_back("Robot:");
+    if (s.has_holding) {
+        midLines.push_back(carry1);
+        midLines.push_back(carry2);
+        midLines.push_back(carry3);
+        midLines.push_back(carryLink);
+    }
     midLines.push_back(rail1);
     midLines.push_back(rail2);
     midLines.push_back(rail3);
