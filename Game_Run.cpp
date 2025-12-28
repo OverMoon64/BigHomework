@@ -70,13 +70,38 @@ void levelrun(int clevelnum,LevelInfo currentlevel)
 
     }
     */
-   cout << "Enter the order num: ";
-    int M;
-    cin >> M;
-    cin.ignore();  // 清除换行符
-
+    string M;
+    int m;
+    while(1)
+    {
+    cout << "Enter the order num: ";
     
-    for (int i = 1; i <= M; i++) 
+    cin >> M;
+    bool iii=1;
+    for(int i=0;i<M.length();i++)
+    {
+        if(M[i]<'0'||M[i]>'9')
+        {
+            cout<<"Please enter right number."<<endl<<endl;
+            iii=0;
+            break;
+        }
+    }
+    if(!iii)continue;
+    m=stoi(M);
+    if(m>0)
+    {
+        cin.ignore();  // 清除换行符
+        break;
+    }
+    else
+    {
+        cout<<"Please enter right number."<<endl<<endl;
+    }
+
+    }
+    
+    for (int i = 1; i <= m; i++) 
     {
         currentline++;
         cout << "Please enter order " << i << endl;

@@ -169,7 +169,7 @@ int chooselevel() {
             continue;
         } else {
             cout << "\n================================================================" << endl;
-            cout << "       OK, Let's go to LEVEL " << levelnumber << " !" << endl;
+            cout << "                 OK, Let's go to LEVEL " << levelnumber << " !" << endl;
             cout << "================================================================" << endl;
             break;
         }
@@ -179,7 +179,7 @@ int chooselevel() {
 
 void displayLevelDetails(int levelNumber) {
     cout << "================================================================" << endl;
-    cout << "              LEVEL " << levelNumber << " INFORMATION" << endl;
+    cout << "                 LEVEL " << levelNumber << " INFORMATION" << endl;
     cout << "================================================================" << endl;
     
     cout << "+-----------------------------------------------------------------------------------------------------------------------------------+" << endl;
