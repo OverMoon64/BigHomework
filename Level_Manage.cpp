@@ -16,7 +16,9 @@ const std::array<LevelInfo, 4> levelData = {{
      "Take two numbers from input, output if equal, discard if not", 
      {6, 2, 7, 7, -9, 3, -3, -3}, {7,-3}, 3},
     // Level 4
-    {{}, "Final Challenge", {}, {}, 0}
+    {{"inbox","outbox","copyfrom","copyto","add","sub","jump","jumpifzero"}, 
+    "Segmented Sums: 0 is an delimiter. Output the sum of each segment; empty segment outputs 0.", 
+    {5,-2,4,0,3,1,0,0,-3,8,-5,0}, {7,4,0,0}, 2}
 }};
 
 void showlevel() {
@@ -76,7 +78,7 @@ void showlevel() {
         "+------------+--------------------------+",
         "|    4       | " + string(pf[4] ? "     FINISHED!           " : "     UNFINISHED          ") + "|",
         "+------------+--------------------------+",
-        "|  " + string(pf[1] && pf[2] && pf[3] && pf[4] ? "ALL LEVELS COMPLETED!" : 
+        "|  " + string(pf[1] && pf[2] && pf[3] && pf[4] ? "       ALL LEVELS COMPLETED!        " : 
                       "Progress: " + to_string(pf[1]+pf[2]+pf[3]+pf[4]) + "/4") + 
                       string(pf[1] && pf[2] && pf[3] && pf[4] ? "" : "                       ") + " |",
         "+---------------------------------------+"

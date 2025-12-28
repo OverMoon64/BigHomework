@@ -213,15 +213,23 @@ void levelrun(int clevelnum,LevelInfo currentlevel)
         if(!is_in_level(orders[j].type,currentlevel.orderset))//判断指令是否被包含
         {
             string msg = "Error on instruction " + to_string(orders[j].line_num);
-            cout << msg << endl;
+
             renderer.Render(build_snapshot(j, executed, msg));
+            cout<<endl;
+            cout<<"==================!!!!!!WARNING!!!!!!=================="<<endl;
+            cout <<"==========!!!!!!"<< msg <<"!!!!!!=========="<< endl;
+            cout<<endl;
             break;
         }
         if(!check_legal(orders[j],currentline))//判断指令是否合法
         {
             string msg = "Error on instruction " + to_string(orders[j].line_num);
-            cout << msg << endl;
+            
             renderer.Render(build_snapshot(j, executed, msg));
+            cout<<endl;
+            cout<<"==================!!!!!!WARNING!!!!!!=================="<<endl;
+            cout <<"==========!!!!!!"<< msg <<"!!!!!!=========="<< endl;
+            cout<<endl;
             break;
         }
 
@@ -340,7 +348,12 @@ void levelrun(int clevelnum,LevelInfo currentlevel)
     }
     if(ispass)
     {
-        cout<<"Mission accomplish. Congratulation!!!"<<endl;
+        printf(
+            "+=============================================+\n"
+            "|    Mission accomplish. Congratulation!!!    |\n"
+            "+=============================================+\n"
+        );
+        
         ifstream fin("level.txt");
         if(!fin)return;
         int p[5];
@@ -359,7 +372,57 @@ void levelrun(int clevelnum,LevelInfo currentlevel)
     }
     else
     {
-        cout<<"Mission failed, what a pity!"<<endl;
+        printf(
+            "+=============================================+\n"
+            "|        Mission failed, what a pity!         |\n"
+            "+=============================================+\n"
+        );
+        bool isis=1;
+        while(isis)
+        {
+        cout<<">>>>>>Do you wanna try again?<<<<<<"<<endl;
+        string str;
+        cout<<"Input Y/N to make your choice>>>";
+        cin>>str;
+        if(str!="Y"&&str!="N")
+        {
+            cout<<endl;
+            cout<<"Stop joking, bro. Don't lose heart."<<endl<<endl;
+        }
+        else if(str=="Y")
+        {
+            cout<<endl;
+            cout<<"Nice, bro! You can make it!"<<endl<<endl;
+            isis=0;
+            levelrun(clevelnum,currentlevel);
+        }
+        else if(str=="N")
+        {
+            cout<<endl;
+            cout<<"Are you sure? Hurry up, bro.(Y/N)>>>";
+            string secondchoice;
+            cin>>secondchoice;
+            if(secondchoice=="Y")
+            {
+                cout<<endl;
+                cout<<"OK. Have a break and you will make it!"<<endl;
+                isis=0;
+            }
+            else if(secondchoice=="N")
+            {
+                cout<<endl;
+                cout<<"Nice, bro! Take it easy and you can make it!"<<endl<<endl;
+                isis=0;
+                levelrun(clevelnum,currentlevel);
+            }
+            else
+            {
+                cout<<endl;
+                cout<<"lol,I have guessed that you will take this step! I know you're tired, let's take a break!"<<endl;
+                isis=0;
+            }
+        }
+        }
     }
 
 }
